@@ -1,0 +1,63 @@
+body {
+    background-color: silver;
+}
+
+.container {
+    max-width: 4000px;
+}
+
+.loginForm{
+    padding: 30px;
+}
+
+.login{
+    width: 30%;
+    float: right;
+    border: 1px solid grey;
+    margin-top: 30px;
+    margin-right: 5%;
+    height: 330px;
+    background: rgba(248,248,248,0.9);
+}
+
+.textfield0 {
+    width: 300px;
+    height: 40px;
+
+
+}
+
+.raisedButton{
+    width: 30%;
+    height: 100px;
+    margin-right: 5%;
+    margin-bottom: 200px;
+    margin-top: 0px;
+    position:relative;
+    float: right;
+}
+
+.input0 {
+    width: 300px;
+    height: 30px;
+    padding: 0px;
+    margin-left: 5%;
+    margin-right: 15%;
+    margin-top: 40px;
+    background: white;
+    border: 1px solid grey;
+}
+.input01{
+    margin-top: 30px;
+
+}
+
+.subhead1 {
+
+    margin-top: 60px;
+    width:140px;
+    height: 20px;
+}
+
+.subhead2 {
+}

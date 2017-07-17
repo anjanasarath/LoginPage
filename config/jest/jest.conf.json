@@ -1,0 +1,24 @@
+{
+  "automock": false,
+  "collectCoverage": true,
+  "collectCoverageFrom": [
+    "src/js/**/*.{js,jsx}",
+    "tests/**/*.{js,jsx}",
+    "!tests/mocked/*.{js,jsx}",
+    "!tests/cucumber/**/*",
+    "!tests/mocked/**/*",
+    "!src/js/**/*.story*{js,jsx}"
+  ],
+  "coverageReporters": [
+    "json",
+    "lcov",
+    "text",
+    "html"
+  ],
+  "coverageDirectory": "./reports/coverage",
+  "moduleNameMapper": {
+    "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/__mocks__/fileMock.js",
+    "\\.(css|less)$": "<rootDir>/__mocks__/styleMock.js"
+  },
+  "setupTestFrameworkScriptFile": "<rootDir>/config/jest/setup-jasmine-env.js"
+}

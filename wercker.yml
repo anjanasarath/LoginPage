@@ -1,0 +1,111 @@
+box: atlassianlabs/docker-node-jdk-chrome-firefox
+build:
+    steps:
+        - add-ssh-key:
+            keyname: MYPACKAGE_KEY
+        - add-to-known_hosts:
+            hostname: github.com
+            fingerprint: 16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48
+        - add-to-known_hosts:
+            hostname: 52.232.104.228
+            fingerprint: 19:c2:47:87:11:11:b6:70:fe:51:75:d5:04:79:f9:43
+        - script:
+            name: environment
+            code: |
+              export WWW_REPORTS=$WERCKER_SOURCE_DIR/reports.tmp/$WERCKER_GIT_REPOSITORY/$WERCKER_GIT_BRANCH/$WERCKER_GIT_COMMIT
+              export REPORTS_URL=https://vibe-reports.spronq.com/reports/$WERCKER_GIT_REPOSITORY/$WERCKER_GIT_BRANCH/$WERCKER_GIT_COMMIT
+        - mbrevda/github-status:
+            token: $GITHUB_TOKEN
+            state: pending
+            context: Reporting
+            url: $REPORTS_URL
+            msg: Awaiting build
+        - install-packages:
+            packages: rsync
+        - script:
+          name: npm install
+          code: |
+            npm install -g gulp
+            npm install
+        - script:
+          name: system information
+          code: |
+            echo "node version $(node --version) running"
+            echo "npm version $(npm --version) running"
+            echo "gulp version $(gulp --version) running"
+        - script:
+          name: tests
+          code: |
+            npm run tests
+        - script:
+          name: build
+          code: |
+            npm run build-production
+    after-steps:
+        - mbrevda/github-status:
+            token: $GITHUB_TOKEN
+            state: pending
+            context: Reporting
+            url: $REPORTS_URL
+            msg: Building reports
+        - script:
+          name: reports
+          code: |
+            npm run reports
+        - script:
+          name: eslint reports
+          code: |
+            npm --silent run eslint-json-summary
+        - script:
+            name: post summary
+            code: |
+              cd $WERCKER_SOURCE_DIR
+              node ./tests/helpers/reporting.js \
+                --server-url=http://vibe-reports.spronq.com/report \
+                --runId=$WERCKER_RUN_ID \
+                --server-auth-key=LKSJDLKASJDLKASJD \
+                --git-domain=$WERCKER_GIT_DOMAIN \
+                --git-owner=$WERCKER_GIT_OWNER \
+                --git-branch=$WERCKER_GIT_BRANCH \
+                --git-repository=$WERCKER_GIT_REPOSITORY \
+                --git-commit=$WERCKER_GIT_COMMIT \
+                --build-started=$WERCKER_MAIN_PIPELINE_STARTED \
+                --build-url=$WERCKER_BUILD_URL \
+                --build-started-by=$WERCKER_STARTED_BY
+        - script:
+            name: copy reports
+            code: |
+              export WWW_REPORTS=$WERCKER_SOURCE_DIR/reports.tmp/$WERCKER_GIT_REPOSITORY/$WERCKER_GIT_BRANCH/$WERCKER_GIT_COMMIT
+              export REPORTS_URL=https://vibe-reports.spronq.com/reports/$WERCKER_GIT_REPOSITORY/$WERCKER_GIT_BRANCH/$WERCKER_GIT_COMMIT
+              mkdir -p $WWW_REPORTS
+              mv $WERCKER_SOURCE_DIR/reports/jest $WWW_REPORTS
+              mv $WERCKER_SOURCE_DIR/reports/eslint.html $WWW_REPORTS
+              mv $WERCKER_SOURCE_DIR/reports/bundle-statistics.html $WWW_REPORTS
+              mv $WERCKER_SOURCE_DIR/reports/coverage/lcov-report $WWW_REPORTS/jest-coverage
+              rsync -azP $WERCKER_SOURCE_DIR/reports.tmp/* wercker@52.232.104.228:/var/www/reports
+        - mbrevda/github-status:
+            token: $GITHUB_TOKEN
+            state: success
+            context: Reporting
+            url: $REPORTS_URL
+            msg: Report created.
+deploy:
+  box:
+    id: spronq/pp2:nginx-alpine-curl-utf8
+    username: $DOCKER_HUB_USERNAME
+    password: $DOCKER_HUB_PASSWORD
+    cmd: /bin/sh
+  steps:
+    - script:
+        name: mv staticfiles
+        code: |
+          rm -rf /usr/share/nginx/html/*
+          cp -Rp $WERCKER_SOURCE_DIR/dist/* /usr/share/nginx/html
+    - internal/docker-push:
+        tag: $DOCKER_HUB_TAG
+        username: $DOCKER_HUB_USERNAME
+        password: $DOCKER_HUB_PASSWORD
+        repository: $DOCKER_HUB_REPO
+        ports: $DOCKER_PORT
+        cmd: nginx -g 'daemon off;'
+        registry:  https://hub.docker.com

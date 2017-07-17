@@ -1,0 +1,13 @@
+{
+  "globals": {
+    "browser": true,
+    "assert": true
+  },
+  "rules": {
+    "no-console": ["error", {
+      "allow": ["log", "error"]
+    }],
+    "import/no-dynamic-require": 0,
+    "no-param-reassign": 0,
+  }
+}
